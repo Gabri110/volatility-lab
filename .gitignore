@@ -1,0 +1,21 @@
+# Virtual environment
+.venv/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+
+# Jupyter checkpoints (notebook OUTPUTS are committed on purpose:
+# the repo must read on GitHub without being executed)
+.ipynb_checkpoints/
+
+# Cached market data — downloaded on first run, not redistributed
+data/*
+!data/.gitkeep
+
+# OS noise
+Thumbs.db
+.DS_Store
