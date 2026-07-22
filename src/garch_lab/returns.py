@@ -4,6 +4,7 @@ Spec: tests/test_returns.py. Theory: guide §1 (docs/concept-guide.md).
 """
 
 import pandas as pd
+import numpy as np
 
 
 def log_returns(prices: pd.Series) -> pd.Series:
@@ -18,4 +19,5 @@ def log_returns(prices: pd.Series) -> pd.Series:
     Guide §1.2 explains why log (not simple) returns are the right choice
     on the time axis. Delete the `raise` and write the body.
     """
-    raise NotImplementedError("Implement me, then run: pytest tests/test_returns.py")
+    
+    return pd.Series(np.diff(np.log(prices)), index=prices.index[1:])

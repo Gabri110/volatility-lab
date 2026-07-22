@@ -22,4 +22,10 @@ def rolling_vol(r: pd.Series, window: int = 21, annualize: bool = False) -> pd.S
 
     Delete the `raise` and write the body.
     """
-    raise NotImplementedError("Implement me, then run: pytest tests/test_volatility.py")
+
+    r2 = r ** 2
+    vol = r2.rolling(window=window).mean() ** 0.5
+    if annualize:
+        vol *= (TRADING_DAYS_PER_YEAR ** 0.5)
+
+    return vol

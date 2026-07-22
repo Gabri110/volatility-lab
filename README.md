@@ -29,19 +29,13 @@ the sober version IS the credible result. -->
 
 ## The question, and why it matters
 
-<!-- S4. 3–5 sentences in your own words. Ingredients: the sign of
-tomorrow's return is nearly unpredictable but its magnitude is strongly
-predictable (the asymmetry the whole subject rests on); a volatility
-forecast is a position size (size ∝ 1/σ̂), a risk limit, and to first order
-an option price. Guide §0 if stuck. -->
+The sign of tomorrow's returns is nearly unpredictable, but its magnitude is strongly predictable. Because of this, we build a volatility forecasting model.
+
+This is interesting because volatility is a key input to risk management and option pricing.
 
 ## Data
 
-<!-- S1. One short paragraph: ^GSPC daily, 2005–present, ADJUSTED close via
-yfinance — one line on why adjusted and on the auto_adjust pin (the comments
-in src/garch_lab/data.py have the story); trading-day calendar, no
-reindexing to calendar days; prices cached locally under data/, not
-committed. -->
+We use the S&P 500 index daily adjusted close from 2005 to present, obtained via yfinance. The adjusted close is preferred as it accounts for corporate actions like dividends and stock splits, providing a more accurate reflection of the stock's value over time. The data is aligned with a trading-day calendar without reindexing to calendar days, and prices are cached locally under the `data/` directory, which is not committed to version control.
 
 ## What the data demand of a model
 
@@ -53,9 +47,13 @@ leverage correlation. End with the punchline: a model that cannot reproduce
 clustering and fat tails is dead on arrival — which is the license for
 GARCH. -->
 
+- Volatility clustering: We notice that high-volatility days are followed by high-volatility days.
 ![Volatility clustering](figures/fig1_clustering.png)
 
+- Fat tails: We fit have fit the returns to Student-t woth estimated ν = 2,4 degrees of freedom.
 ![Fat tails: QQ plot vs normal](figures/fig2_qq_tails.png)
+
+- Asymmetry of the volatility: The sign of the returns affects tomorrow's volatility differently, and a symmetric model fails to take that into account. In particular, negative returns leads to a higher volatility.
 
 ## Model and evaluation design
 
@@ -110,6 +108,11 @@ python -m venv .venv
 policy), don't fight it — call .venv\Scripts\python.exe directly, as above.
 Mention that requirements.txt is a pip-freeze snapshot of the environment
 that produced the results (you create it in U4). -->
+
+<!-- Figures are Plotly, exported to PNG with fig.write_image("figures/figN.png")
+via kaleido (already in the dependencies) so they render inline on GitHub. If an
+export ever fails asking for a browser, fetch one once with:
+.venv\Scripts\python.exe -c "import kaleido; kaleido.get_chrome_sync()" -->
 
 ## References
 
