@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "garch-lab"
 version = "0.1.0"
 description = "Study: stylized facts of equity returns and GARCH(1,1) volatility forecasting, evaluated honestly out of sample."
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
     "numpy",
     "pandas",
@@ -18,11 +18,11 @@ dependencies = [
     "yfinance>=0.2.51",
 ]
 
-# Install for development with:  pip install -e ".[dev]"
-# requirements.txt is intentionally absent from the scaffold: it gets created
-# on Sunday evening via `pip freeze > requirements.txt` as a pinned snapshot
-# of the environment that actually produced the results.
-[project.optional-dependencies]
+# Set up for development with:  uv sync
+# uv.lock is the committed, pinned snapshot of the exact environment that
+# produced the results — uv maintains it automatically on every `uv sync`
+# / `uv run`, so there is no separate `pip freeze` step. Commit uv.lock.
+[dependency-groups]
 dev = [
     "pytest",
     "jupyterlab",

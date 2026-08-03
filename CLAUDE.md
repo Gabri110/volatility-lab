@@ -35,5 +35,6 @@ the analysis destroys the repo's value.
 
 ## Commands
 
-- Tests: `.venv\Scripts\python.exe -m pytest`
-- Notebooks: `.venv\Scripts\python.exe -m jupyter lab`
+- Setup: `uv sync` (creates `.venv`, installs deps + dev tools, writes `uv.lock`)
+- Tests: `uv run pytest`
+- Notebooks: `uv run jupyter lab`

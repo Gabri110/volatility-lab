@@ -98,16 +98,15 @@ zero-return-day handling. -->
 ## Reproduce it
 
 ```
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.venv\Scripts\python.exe -m pytest          # the suite specifies the library functions
-.venv\Scripts\python.exe -m jupyter lab     # run notebooks/01, then notebooks/02
+uv sync                 # creates .venv and installs everything, incl. dev tools
+uv run pytest           # the suite specifies the library functions
+uv run jupyter lab      # run notebooks/01, then notebooks/02
 ```
 
-<!-- Windows note to keep: if PowerShell blocks .venv activation (execution
-policy), don't fight it — call .venv\Scripts\python.exe directly, as above.
-Mention that requirements.txt is a pip-freeze snapshot of the environment
-that produced the results (you create it in U4). -->
+<!-- Windows note to keep: `uv run` never needs .venv activation — it runs
+inside the project environment directly, so PowerShell execution-policy
+trouble is irrelevant. uv.lock is committed: it pins the exact environment
+that produced the results, so `uv sync` reproduces it bit-for-bit. -->
 
 <!-- Figures are Plotly, exported to PNG with fig.write_image("figures/figN.png")
 via kaleido (already in the dependencies) so they render inline on GitHub. If an
