@@ -47,10 +47,12 @@ leverage correlation. End with the punchline: a model that cannot reproduce
 clustering and fat tails is dead on arrival — which is the license for
 GARCH. -->
 
-- Volatility clustering: We notice that high-volatility days are followed by high-volatility days.
+- Daily returns are uncorrelated, but they are not independent. We find that there are higher-order dependencies between them.
+
+- Volatility clustering: We notice that high-volatility days are followed by high-volatility days. We find that the ACF od |r| stays positive up to 100 lags. There is a **long memory**.
 ![Volatility clustering](figures/fig1_clustering.png)
 
-- Fat tails: We fit have fit the returns to Student-t woth estimated ν = 2,4 degrees of freedom.
+- Fat tails: We fit have fit the returns to Student-t woth estimated ν = 2,4 degrees of freedom. Of course, these are reduced as we aggregate to weekly or monthly because of the Central Limit Theorem (although slowly).
 ![Fat tails: QQ plot vs normal](figures/fig2_qq_tails.png)
 
 - Asymmetry of the volatility: The sign of the returns affects tomorrow's volatility differently, and a symmetric model fails to take that into account. In particular, negative returns leads to a higher volatility.

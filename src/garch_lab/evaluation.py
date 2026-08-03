@@ -5,6 +5,7 @@ These four functions are Sunday morning's warm-up, before any model is fit.
 """
 
 import pandas as pd
+import numpy as np
 
 
 def chronological_split(s: pd.Series, train_frac: float = 0.7) -> tuple[pd.Series, pd.Series]:
@@ -19,7 +20,12 @@ def chronological_split(s: pd.Series, train_frac: float = 0.7) -> tuple[pd.Serie
     Guide §5.1: with serially dependent data, a random split leaks the
     test set's neighborhood into training. Delete the `raise` and write it.
     """
-    raise NotImplementedError("Implement me, then run: pytest tests/test_evaluation.py")
+    if train_frac <= 0 or train_frac >= 1:
+        raise ValueError("train_frac should be between 0 and 1 (NOT included).")
+    split_point = int(train_frac * len(s))
+    s_train = s[:split_point]
+    s_test = s[split_point:]
+    return s_train, s_test
 
 
 def mse(proxy: pd.Series, forecast: pd.Series) -> float:
@@ -31,7 +37,9 @@ def mse(proxy: pd.Series, forecast: pd.Series) -> float:
       a bug that produces a number instead of an error)
     - returns the time-average of (proxy - forecast)² as a float
     """
-    raise NotImplementedError("Implement me, then run: pytest tests/test_evaluation.py")
+    if not proxy.index.equals(forecast.index):
+        raise ValueError("Indexes of proxy and forecast must be identical.")
+    return float(((proxy - forecast) ** 2).mean())
 
 
 def qlike(proxy: pd.Series, forecast: pd.Series) -> float:
@@ -47,7 +55,11 @@ def qlike(proxy: pd.Series, forecast: pd.Series) -> float:
       over-forecasting. Guide §5.3 explains why that asymmetry is the
       right one for a risk manager.
     """
-    raise NotImplementedError("Implement me, then run: pytest tests/test_evaluation.py")
+    if not proxy.index.equals(forecast.index):
+        raise ValueError("Indexes of proxy and forecast must be identical.")
+    if (proxy <= 0).any() or (forecast <= 0).any():
+        raise ValueError("All proxy and forecast values must be strictly positive.")
+    return float((proxy / forecast - (proxy / forecast).apply(np.log) - 1).mean())
 
 
 def rw_variance_forecast(r: pd.Series, window: int = 21) -> pd.Series:
@@ -64,4 +76,6 @@ def rw_variance_forecast(r: pd.Series, window: int = 21) -> pd.Series:
       by shocking one day and asserting the forecast for that day is
       unmoved while the next day's reacts (guide §5.1, look-ahead bias)
     """
-    raise NotImplementedError("Implement me, then run: pytest tests/test_evaluation.py")
+    r2 = np.square(r)
+    forecast = r2.shift(1).rolling(window=window).mean()
+    return forecast
