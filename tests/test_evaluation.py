@@ -104,6 +104,15 @@ def test_split_no_shuffle(s):
     assert train.equals(s.iloc[:70])
 
 
+def test_split_point_is_floor_not_round():
+    # 0.75 * 10 = 7.5: int() truncates to 7, round() would give 8. The
+    # contract pins the floor so the published sample sizes stay stable.
+    s10 = _series(np.arange(10.0))
+    train, test = chronological_split(s10, train_frac=0.75)
+    assert len(train) == 7
+    assert len(test) == 3
+
+
 @pytest.mark.parametrize("bad", [0.0, 1.0, 1.3, -0.2])
 def test_split_bad_frac_raises(s, bad):
     with pytest.raises(ValueError):

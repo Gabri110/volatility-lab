@@ -26,3 +26,9 @@ docs/concept-guide.md
 # OS noise
 Thumbs.db
 .DS_Store
+
+# Secrets and key material, none of which should ever be committed
+.env
+*.env
+*.key
+*.pem

@@ -1,11 +1,14 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "garch-lab"
 version = "0.1.0"
 description = "Study: stylized facts of equity returns and GARCH(1,1) volatility forecasting, evaluated honestly out of sample."
+readme = "README.md"
+authors = [{ name = "Gabriel Ybarra Marcaida", email = "gabriybarra@gmail.com" }]
+license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
     "numpy",
@@ -27,6 +30,9 @@ dev = [
     "pytest",
     "jupyterlab",
 ]
+
+[project.urls]
+Repository = "https://github.com/Gabri110/volatility-lab"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -62,7 +62,7 @@ def qlike(proxy: pd.Series, forecast: pd.Series) -> float:
     """
     if not proxy.index.equals(forecast.index):
         raise ValueError("Indexes of proxy and forecast must be identical.")
-    if (proxy <= 0).any() or (forecast <= 0).any():
+    if (proxy <= 0).any() or (forecast <= 0).any() or (forecast.isna()).any() or (proxy.isna()).any():
         raise ValueError("All proxy and forecast values must be strictly positive.")
     return float((proxy / forecast - (proxy / forecast).apply(np.log) - 1).mean())
 

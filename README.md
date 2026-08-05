@@ -8,9 +8,9 @@ against two naive benchmarks with a proxy-robust loss.
 ## TL;DR
 
 Using S&P 500 daily log returns from 2005, with a 70/30 chronological split and
-1,629 test days, we find that GARCH(1,1)-N gives a solid reduction of 24.9%
-QLIKE and 26.3% MSE against unconditional volatility, and a modest reduction of
-5.9% QLIKE and 17.5% MSE against a 21-day rolling variance random walk. These
+1,629 test days, we find that GARCH(1,1)-N gives a solid reduction of 24.6%
+QLIKE and 25.7% MSE against unconditional volatility, and a modest reduction of
+5.5% QLIKE and 16.8% MSE against a 21-day rolling variance random walk. These
 are one-day-ahead variance forecasts scored against squared returns, with
 parameters frozen at their training estimates. We are still missing the error
 bars that would support the apparent positive verdict.
@@ -18,13 +18,13 @@ bars that would support the apparent positive verdict.
 Our test window opens on 7 February 2020, so training is entirely pre-COVID,
 which heavily penalizes the constant baseline. We fit both a normal and a
 Student-t innovation distribution and found the Gaussian slightly better
-(1.5308 vs 1.5355 QLIKE).
+(1.5375 vs 1.5436 QLIKE).
 
 ### Summary of findings
 
-- QLIKE over the test period: GARCH-N 1.53, random walk 1.63, unconditional 2.04
-- Improvement against unconditional 24.9%, against the random walk 5.9%
-- Fitted persistence α+β = 0.9775, shock half-life ≈ 30 trading days
+- QLIKE over the test period: GARCH-N 1.54, random walk 1.63, unconditional 2.04
+- Improvement against unconditional 24.6%, against the random walk 5.5%
+- Fitted persistence α+β = 0.9773, shock half-life ≈ 30 trading days
 - MSE gives the same ordering as QLIKE, so the ranking is not an artifact of
   the loss we chose
 
@@ -87,8 +87,8 @@ QLIKE is the primary loss and MSE the secondary one. Patton (2011) shows that
 under a noisy proxy many intuitive losses systematically misrank models, and
 characterizes the class of losses whose rankings survive the noise; MSE and
 QLIKE are its two most-used members. There are no zero-return days in the
-sample, so no observation had to be dropped or clipped before taking the
-logarithm in QLIKE.
+test window, so no observation had to be dropped or clipped before taking
+the logarithm in QLIKE.
 
 ## Results
 
@@ -97,8 +97,8 @@ We report one-step-ahead variance forecasts over the 1,629 test days
 
 | Forecast | QLIKE | MSE |
 |---|---|---|
-| GARCH(1,1)-N | 1.530756 | 34.646702 |
-| GARCH(1,1)-t | 1.535537 | 35.301223 |
+| GARCH(1,1)-N | 1.537518 | 34.937572 |
+| GARCH(1,1)-t | 1.543563 | 35.575560 |
 | Random Walk | 1.627217 | 41.970833 |
 | Unconditional | 2.038582 | 46.998799 |
 
@@ -116,7 +116,14 @@ the data.
 
 ## Limitations, and what I would do next
 
-_To write: one line per limitation, each tied to a number measured above._
+- The leverage effect measured in notebook 01 is unmodelled, since GARCH(1,1)
+  is sign-blind. The model has to be extended to account for this.
+- The ACF of |r| decays more slowly than any exponential (fig1), which points
+  to HAR-RV on true realized volatility.
+- A single split with frozen parameters should become walk-forward
+  re-estimation.
+- The QLIKE gap carries no significance statement. These should be computed to support the apparent positive verdict.
+- We are comparing against the squared returns (a noisy proxy), not the true volatility itself. We could repeat the analysis with other proxies. 
 
 ## Reproduce it
 
