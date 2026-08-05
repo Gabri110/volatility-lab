@@ -1,8 +1,8 @@
-"""Spec for garch_lab.evaluation — guide §5.
+"""Spec for garch_lab.evaluation.
 
-Sunday morning's warm-up (roadmap box U1): make these green BEFORE fitting
-any model. They encode the evaluation discipline the whole project is
-graded on — including the no-look-ahead perturbation test at the bottom.
+None of these needs a fitted model, so they can run first. They encode the
+evaluation discipline the rest of the project depends on, including the
+no-look-ahead perturbation test at the bottom.
 """
 
 import numpy as np
@@ -51,10 +51,10 @@ def test_qlike_nonnegative_zero_iff_perfect(p):
 
 
 def test_qlike_punishes_underforecast_more(p):
-    # guide §5.3: dying of underestimated volatility is worse than paying
-    # opportunity cost on overestimated volatility — QLIKE encodes that.
-    under = qlike(p, p / 2)  # forecast HALF the true variance
-    over = qlike(p, 2 * p)   # forecast DOUBLE the true variance
+    # Underestimating volatility is worse for a risk manager than paying
+    # opportunity cost on an overestimate, and QLIKE encodes that.
+    under = qlike(p, p / 2)  # forecast half the true variance
+    over = qlike(p, 2 * p)   # forecast double the true variance
     assert under == pytest.approx(1.0 - np.log(2.0))  # 0.30685...
     assert over == pytest.approx(np.log(2.0) - 0.5)   # 0.19315...
     assert under > over
@@ -75,7 +75,7 @@ def test_qlike_rejects_nonpositive_proxy():
 
 
 def test_losses_reject_misaligned_index(p):
-    # pandas would silently align on the index union and inject NaNs —
+    # pandas would silently align on the index union and inject NaNs,
     # a bug that produces a plausible number instead of an error
     h = p.shift(1).dropna()  # same values, shifted dates
     with pytest.raises(ValueError):
@@ -123,17 +123,17 @@ def test_rw_warmup_is_window_not_window_minus_1():
     r = _series(rng.normal(0.0, 0.01, 60))
     f = rw_variance_forecast(r, window=21)
     assert f.index.equals(r.index)
-    assert f.isna().sum() == 21  # one MORE NaN than rolling_vol: the shift is real
+    assert f.isna().sum() == 21  # one more NaN than rolling_vol: the shift is real
 
 
 def test_rw_no_look_ahead_perturbation():
-    # THE test (guide §5.1): the forecast FOR day t must not see day t.
+    # The forecast for day t must not see day t.
     rng = np.random.default_rng(6)
     r1 = _series(rng.normal(0.0, 0.01, 60))
     r2 = r1.copy()
     r2.iloc[40] *= 10.0  # a shock lands on day 40
     f1 = rw_variance_forecast(r1, window=21)
     f2 = rw_variance_forecast(r2, window=21)
-    assert f2.iloc[40] == pytest.approx(f1.iloc[40])  # forecast FOR the shock day: unmoved
-    assert f2.iloc[41] != pytest.approx(f1.iloc[41])  # the day AFTER: reacts
+    assert f2.iloc[40] == pytest.approx(f1.iloc[40])  # forecast for the shock day: unmoved
+    assert f2.iloc[41] != pytest.approx(f1.iloc[41])  # the day after: reacts
     pd.testing.assert_series_equal(f1.iloc[:41], f2.iloc[:41])  # nothing earlier moves

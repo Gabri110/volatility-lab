@@ -1,7 +1,6 @@
-"""Spec for garch_lab.returns.log_returns — guide §1.
+"""Spec for garch_lab.returns.log_returns.
 
-Make these green before notebook 01 §1 (roadmap box S1).
-Test names are the contract; read them as sentences.
+The test names are the contract; they read as sentences.
 """
 
 import numpy as np
@@ -21,20 +20,20 @@ def px():
 def test_known_value_not_simple_return(px):
     two = pd.Series([100.0, 200.0], index=px.index[:2])
     r = log_returns(two)
-    # ln(2) = 0.693..., NOT 1.0 — if you got 1.0 you computed simple returns
+    # ln(2) = 0.693..., not 1.0. A result of 1.0 means simple returns.
     assert np.isclose(r.iloc[0], np.log(2.0))
 
 
 def test_length_and_date_labels(px):
     r = log_returns(px)
     assert len(r) == len(px) - 1
-    # a return is labeled by the date it ENDS on
+    # a return is labeled by the date it ends on
     assert r.index.equals(px.index[1:])
 
 
 def test_time_additivity(px):
-    # guide §1.2 — the property you chose log returns FOR:
-    # the sum of daily log returns is exactly the full-period log return
+    # the property log returns are chosen for: the sum of daily log returns
+    # is exactly the full-period log return
     r = log_returns(px)
     assert np.isclose(r.sum(), np.log(px.iloc[-1] / px.iloc[0]))
 

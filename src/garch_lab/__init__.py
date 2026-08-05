@@ -1,21 +1,23 @@
-"""garch_lab: helpers for the weekend volatility study.
+"""garch_lab: the small library behind the two notebooks.
 
-Only data loading ships implemented. Everything with analytical content
-(returns, volatility, evaluation) is a stub for YOU to write — run
-`pytest` and make it green. See ROADMAP.md for the order.
+Four modules: `data` loads and caches prices, `returns` converts them to log
+returns, `volatility` estimates rolling realized volatility, and `evaluation`
+holds the chronological split, the two loss functions and the naive variance
+benchmark. Every contract is stated in a docstring and enforced by `tests/`.
 """
 
 from garch_lab.data import load_prices
 from garch_lab.evaluation import chronological_split, mse, qlike, rw_variance_forecast
 from garch_lab.returns import log_returns
-from garch_lab.volatility import rolling_vol
+from garch_lab.volatility import TRADING_DAYS_PER_YEAR, rolling_vol
 
 __all__ = [
     "load_prices",
     "log_returns",
     "rolling_vol",
+    "TRADING_DAYS_PER_YEAR",
+    "chronological_split",
     "mse",
     "qlike",
-    "chronological_split",
     "rw_variance_forecast",
 ]

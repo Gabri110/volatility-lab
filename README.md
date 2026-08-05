@@ -5,99 +5,122 @@ returns: verify the stylized facts, fit GARCH(1,1), produce one-day-ahead
 variance forecasts on a 30% holdout with frozen parameters, and score them
 against two naive benchmarks with a proxy-robust loss.
 
-**Status: in progress.** <!-- Delete this line in roadmap box U4. -->
-
-<!-- HOW TO USE THIS SKELETON
-Each section carries a comment like this saying what belongs in it and which
-ROADMAP.md box produces it. Write in your own voice: conclusion first,
-numbers over adjectives, no "This project demonstrates..." — state findings,
-not virtues. Delete every skeleton comment before pushing. -->
-
 ## TL;DR
 
-<!-- U4. Paste the sober-conclusion paragraph from the last cell of
-notebook 02, then compress it into 3–4 bullets, each carrying a NUMBER.
-The expected honest shape (guide §5.2): GARCH beats the unconditional
-benchmark decisively and beats yesterday's rolling vol modestly or not at
-all at a one-day horizon. If that is what you find, say exactly that —
-the sober version IS the credible result. -->
+Using S&P 500 daily log returns from 2005, with a 70/30 chronological split and
+1,629 test days, we find that GARCH(1,1)-N gives a solid reduction of 24.9%
+QLIKE and 26.3% MSE against unconditional volatility, and a modest reduction of
+5.9% QLIKE and 17.5% MSE against a 21-day rolling variance random walk. These
+are one-day-ahead variance forecasts scored against squared returns, with
+parameters frozen at their training estimates. We are still missing the error
+bars that would support the apparent positive verdict.
 
-- _[QLIKE over the test period: GARCH-t … vs random walk … vs unconditional …]_
-- _[Improvement vs unconditional: …% · vs random walk: …%]_
-- _[Fitted persistence α+β = …, shock half-life ≈ … trading days]_
-- _[One sentence on whether MSE agrees with the QLIKE ranking, and why that matters]_
+Our test window opens on 7 February 2020, so training is entirely pre-COVID,
+which heavily penalizes the constant baseline. We fit both a normal and a
+Student-t innovation distribution and found the Gaussian slightly better
+(1.5308 vs 1.5355 QLIKE).
+
+### Summary of findings
+
+- QLIKE over the test period: GARCH-N 1.53, random walk 1.63, unconditional 2.04
+- Improvement against unconditional 24.9%, against the random walk 5.9%
+- Fitted persistence α+β = 0.9775, shock half-life ≈ 30 trading days
+- MSE gives the same ordering as QLIKE, so the ranking is not an artifact of
+  the loss we chose
 
 ## The question, and why it matters
 
-The sign of tomorrow's returns is nearly unpredictable, but its magnitude is strongly predictable. Because of this, we build a volatility forecasting model.
-
-This is interesting because volatility is a key input to risk management and option pricing.
+The sign of tomorrow's return is nearly unpredictable, but its magnitude is
+strongly predictable. That is what makes a volatility forecast worth building
+at all. Volatility is an input to position sizing, to risk limits and VaR, and
+to option pricing, so the question is whether a standard conditional-variance
+model earns its complexity against forecasts anyone can produce in one line.
 
 ## Data
 
-We use the S&P 500 index daily adjusted close from 2005 to present, obtained via yfinance. The adjusted close is preferred as it accounts for corporate actions like dividends and stock splits, providing a more accurate reflection of the stock's value over time. The data is aligned with a trading-day calendar without reindexing to calendar days, and prices are cached locally under the `data/` directory, which is not committed to version control.
+We use the S&P 500 index (`^GSPC`) daily close from 2005 to 3 August 2026,
+obtained via yfinance, which gives 5,428 daily log returns. We request
+split- and dividend-adjusted prices, which protects the pipeline if it is ever
+pointed at a stock or an ETF, where unadjusted closes carry a fake return on
+every ex-dividend day and a fake crash at every split. For a price index such
+as `^GSPC` the adjustment is a no-op, since it pays no dividends and does not
+split.
+
+We work in trading time, using the series as it comes, and do not reindex to
+calendar days, which would inject artificial zero returns across weekends and
+holidays. Prices are cached under `data/`, which is not committed.
 
 ## What the data demand of a model
 
-<!-- S4. One short paragraph per verified stylized fact, each anchored to a
-number you computed in notebook 01: excess kurtosis (and its subsample
-instability), the |r| > 4σ day count vs the Gaussian expectation, fitted
-Student-t ν̂, lag-1 ACF of |r| and how far the significance extends, the
-leverage correlation. End with the punchline: a model that cannot reproduce
-clustering and fat tails is dead on arrival — which is the license for
-GARCH. -->
+- Daily returns are uncorrelated, but they are not independent. The dependence
+  survives in the higher moments.
 
-- Daily returns are uncorrelated, but they are not independent. We find that there are higher-order dependencies between them.
+- Volatility clustering. High-volatility days are followed by high-volatility
+  days, and the ACF of |r| stays positive out to 100 lags, decaying far more
+  slowly than the exponential a GARCH(1,1) implies.
 
-- Volatility clustering: We notice that high-volatility days are followed by high-volatility days. We find that the ACF od |r| stays positive up to 100 lags. There is a **long memory**.
-![Volatility clustering](figures/fig1_clustering.png)
+  ![Volatility clustering](figures/fig1_clustering.png)
 
-- Fat tails: We fit have fit the returns to Student-t woth estimated ν = 2,4 degrees of freedom. Of course, these are reduced as we aggregate to weekly or monthly because of the Central Limit Theorem (although slowly).
-![Fat tails: QQ plot vs normal](figures/fig2_qq_tails.png)
+- Fat tails. Fitting a Student-t to the returns gives ν̂ = 2.4 degrees of
+  freedom. Aggregating to weekly or monthly returns thins the tails, though
+  slowly, as the central limit theorem grinds against both the dependence and
+  the tail weight.
 
-- Asymmetry of the volatility: The sign of the returns affects tomorrow's volatility differently, and a symmetric model fails to take that into account. In particular, negative returns leads to a higher volatility.
+  ![Fat tails: QQ plot vs normal](figures/fig2_qq_tails.png)
+
+- Asymmetry. The sign of today's return affects tomorrow's volatility:
+  negative returns are followed by higher volatility than positive returns of
+  the same size. A symmetric model cannot reproduce this.
 
 ## Model and evaluation design
 
-<!-- U2/U3. Be precise, it is the section readers check: GARCH(1,1)
-with Gaussian and Student-t innovations, fit by MLE on the first 70%
-(chronological split at [date]); one-step-ahead variance forecasts over the
-last 30% with parameters FROZEN at their train estimates (no refitting);
-benchmarks = 21-day random-walk variance and unconditional train variance;
-proxy = squared daily return; QLIKE primary and MSE secondary, with one
-sentence on Patton (2011) — under a noisy proxy, most intuitive losses can
-systematically misrank models; these two cannot. Disclose the zero-return-
-day count and your drop-vs-clip decision here. -->
+We fit GARCH(1,1) with Gaussian and Student-t innovations by maximum likelihood
+on the first 70% of the sample. The chronological split puts the last training
+day at 6 February 2020 and opens the test window on 7 February 2020.
+
+Over the remaining 30% we produce one-step-ahead variance forecasts with the
+parameters frozen at their training estimates, with no refitting. The
+benchmarks are a 21-day random-walk variance and the unconditional training
+variance. The proxy is the squared daily return.
+
+QLIKE is the primary loss and MSE the secondary one. Patton (2011) shows that
+under a noisy proxy many intuitive losses systematically misrank models, and
+characterizes the class of losses whose rankings survive the noise; MSE and
+QLIKE are its two most-used members. There are no zero-return days in the
+sample, so no observation had to be dropped or clipped before taking the
+logarithm in QLIKE.
 
 ## Results
 
-<!-- U4. The loss table plus ONE interpretation paragraph. State the units
-(daily variance, %² per day) next to the table. -->
+We report one-step-ahead variance forecasts over the 1,629 test days
+(2020-02-07 to 2026-08-03), in daily variance units of %² per day.
 
 | Forecast | QLIKE | MSE |
 |---|---|---|
-| GARCH(1,1)-t | _…_ | _…_ |
-| GARCH(1,1)-N | _…_ | _…_ |
-| Random walk (21d) | _…_ | _…_ |
-| Unconditional (train) | _…_ | _…_ |
+| GARCH(1,1)-N | 1.530756 | 34.646702 |
+| GARCH(1,1)-t | 1.535537 | 35.301223 |
+| Random Walk | 1.627217 | 41.970833 |
+| Unconditional | 2.038582 | 46.998799 |
 
-![Rolling vs GARCH conditional volatility](figures/fig3_rolling_vs_garch.png)
+GARCH(1,1)-N ranks first on both losses. The gap to the unconditional benchmark
+is large and the gap to the random walk is small, which is the expected shape at
+a one-day horizon: daily volatility is persistent enough that "tomorrow looks
+like the recent past" is genuinely hard to beat.
 
-<!-- There is deliberately NO forecast-vs-realized scatter here: the daily
-squared-return proxy carries noise ≈ 141% of its signal (guide §3.3), so
-that picture is uninformative by construction. Say that in one sentence —
-it is worth more than the plot. -->
+Plotting the 21-day rolling volatility against the GARCH(1,1)-N conditional
+volatility shows the difference in responsiveness between a boxcar filter with
+equal weights and an exponentially weighted one whose decay is estimated from
+the data.
+
+![Rolling vs GARCH conditional volatility](figures/fig4_rolling_vs_garch.png)
 
 ## Limitations, and what I would do next
 
-<!-- U4. Honest list, one line each, every item tied to something you
-MEASURED: leverage effect present in the data but GARCH(1,1) is sign-blind
-→ GJR/EGARCH; empirical ACF of |r| decays slower than any exponential →
-HAR-RV; a single 70/30 split with frozen parameters → walk-forward
-re-estimation; the QLIKE gap has no significance attached → Diebold–Mariano;
-zero-return-day handling. -->
+_To write: one line per limitation, each tied to a number measured above._
 
 ## Reproduce it
+
+Requires Python 3.14 or later.
 
 ```
 uv sync                 # creates .venv and installs everything, incl. dev tools
@@ -105,19 +128,45 @@ uv run pytest           # the suite specifies the library functions
 uv run jupyter lab      # run notebooks/01, then notebooks/02
 ```
 
-<!-- Windows note to keep: `uv run` never needs .venv activation — it runs
-inside the project environment directly, so PowerShell execution-policy
-trouble is irrelevant. uv.lock is committed: it pins the exact environment
-that produced the results, so `uv sync` reproduces it bit-for-bit. -->
+## Conventions
 
-<!-- Figures are Plotly, exported to PNG with fig.write_image("figures/figN.png")
-via kaleido (already in the dependencies) so they render inline on GitHub. If an
-export ever fails asking for a browser, fetch one once with:
-.venv\Scripts\python.exe -c "import kaleido; kaleido.get_chrome_sync()" -->
+- Log returns throughout. Notebook 02 works in %²-per-day variance units.
+- `rolling_vol` at t includes t, so it is an estimate at t.
+  `rw_variance_forecast` at t excludes t, so it is a forecast for t. The two
+  are one day apart on purpose.
+- Chronological splits only. Nothing computed at time t may touch data dated
+  after t.
+- QLIKE primary, MSE secondary, no other losses.
+
+## How this was built
+
+The scaffold of this repository was AI-generated under the constraints written
+down in [CLAUDE.md](CLAUDE.md): the test suite as an executable spec, the
+notebook skeletons, and a concept guide kept outside the repo. Every line of
+analysis, in `src/garch_lab/` and in both notebooks, is mine. The point of the
+arrangement was to be able to defend the result rather than to arrive at it
+quickly.
 
 ## References
 
-Cont (2001) — stylized facts. Engle (1982) — ARCH. Bollerslev (1986) —
-GARCH(1,1). Patton (2011) — loss functions under imperfect volatility
-proxies. Annotated list and the full conceptual companion:
-[docs/concept-guide.md](docs/concept-guide.md).
+Cont, R. (2001). Empirical properties of asset returns: stylized facts and
+statistical issues. *Quantitative Finance* 1(2). The stylized-facts catalogue.
+
+Mandelbrot, B. (1963). The variation of certain speculative prices. *Journal of
+Business* 36. Volatility clustering, named and shown.
+
+Engle, R. (1982). Autoregressive conditional heteroscedasticity with estimates
+of the variance of United Kingdom inflation. *Econometrica* 50(4). ARCH.
+
+Bollerslev, T. (1986). Generalized autoregressive conditional
+heteroskedasticity. *Journal of Econometrics* 31. GARCH(1,1).
+
+Patton, A. (2011). Volatility forecast comparison using imperfect volatility
+proxies. *Journal of Econometrics* 160(1). Which losses rank models correctly
+when the target is a noisy proxy.
+
+Diebold, F. and Mariano, R. (1995). Comparing predictive accuracy. *Journal of
+Business & Economic Statistics* 13(3). The forecast-comparison test this study
+still owes.
+
+Sheppard, K. The `arch` package. https://arch.readthedocs.io

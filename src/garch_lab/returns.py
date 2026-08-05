@@ -1,6 +1,6 @@
-"""Log returns — YOUR implementation.
+"""Log returns.
 
-Spec: tests/test_returns.py. Theory: guide §1 (docs/concept-guide.md).
+Spec: tests/test_returns.py.
 """
 
 import pandas as pd
@@ -16,8 +16,7 @@ def log_returns(prices: pd.Series) -> pd.Series:
     - values are natural-log ratios, not simple returns
     - time-additive: the sum over a window equals ln(P_last / P_first)
 
-    Guide §1.2 explains why log (not simple) returns are the right choice
-    on the time axis. Delete the `raise` and write the body.
+    Log returns are additive over time, which is the axis volatility
+    modelling lives on; simple returns are additive across assets instead.
     """
-    
     return pd.Series(np.diff(np.log(prices)), index=prices.index[1:])
