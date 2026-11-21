@@ -8,9 +8,9 @@ against two naive benchmarks with a proxy-robust loss.
 ## TL;DR
 
 Using S&P 500 daily log returns from 2005, with a 70/30 chronological split and
-1,629 test days, we find that GARCH(1,1)-N gives a solid reduction of 24.6%
-QLIKE and 25.7% MSE against unconditional volatility, and a modest reduction of
-5.5% QLIKE and 16.8% MSE against a 21-day rolling variance random walk. These
+1,629 test days, we find that the QLIKE of GARCH(1,1)-N is 0.50 below that of
+the unconditional variance and 0.09 below that of a 21-day rolling variance.
+Its MSE is 25.7% lower than the first and 16.8% lower than the second. These
 are one-day-ahead variance forecasts scored against squared returns, with
 parameters frozen at their training estimates. We are still missing the error
 bars that would support the apparent positive verdict.
@@ -18,12 +18,16 @@ bars that would support the apparent positive verdict.
 Our test window opens on 7 February 2020, so training is entirely pre-COVID,
 which heavily penalizes the constant baseline. We fit both a normal and a
 Student-t innovation distribution and found the Gaussian slightly better
-(1.5375 vs 1.5436 QLIKE).
+(1.5375 vs 1.5436 QLIKE), a gap of 0.006 that we have no test to tell apart
+from zero.
 
 ### Summary of findings
 
-- QLIKE over the test period: GARCH-N 1.54, random walk 1.63, unconditional 2.04
-- Improvement against unconditional 24.6%, against the random walk 5.5%
+- QLIKE over the test period: GARCH-N 1.54, 21-day rolling variance 1.63,
+  unconditional 2.04
+- QLIKE gap to the unconditional variance 0.50, to the rolling variance 0.09.
+  The level of QLIKE depends on the form in which it is written, so we report
+  differences and not percentages
 - Fitted persistence α+β = 0.9773, shock half-life ≈ 30 trading days
 - MSE gives the same ordering as QLIKE, so the ranking is not an artifact of
   the loss we chose
@@ -52,8 +56,11 @@ holidays. Prices are cached under `data/`, which is not committed.
 
 ## What the data demand of a model
 
-- Daily returns are uncorrelated, but they are not independent. The dependence
-  survives in the higher moments.
+- Daily returns show almost no linear autocorrelation. Most lags of the ACF
+  sit inside the 95% band of an iid series. The lag-1 autocorrelation is the
+  exception: it falls well outside, and we have not explained why. But the
+  returns are not independent, and the dependence survives in the higher
+  moments.
 
 - Volatility clustering. High-volatility days are followed by high-volatility
   days, and the ACF of |r| stays positive out to 100 lags, decaying far more
@@ -80,7 +87,7 @@ day at 6 February 2020 and opens the test window on 7 February 2020.
 
 Over the remaining 30% we produce one-step-ahead variance forecasts with the
 parameters frozen at their training estimates, with no refitting. The
-benchmarks are a 21-day random-walk variance and the unconditional training
+benchmarks are a 21-day rolling variance and the unconditional training
 variance. The proxy is the squared daily return.
 
 QLIKE is the primary loss and MSE the secondary one. Patton (2011) shows that
@@ -93,19 +100,21 @@ the logarithm in QLIKE.
 ## Results
 
 We report one-step-ahead variance forecasts over the 1,629 test days
-(2020-02-07 to 2026-08-03), in daily variance units of %² per day.
+(2020-02-07 to 2026-08-03). The forecasts are in daily variance units of %²
+per day, so the MSE is in the square of those units and QLIKE has none.
 
 | Forecast | QLIKE | MSE |
 |---|---|---|
 | GARCH(1,1)-N | 1.537518 | 34.937572 |
 | GARCH(1,1)-t | 1.543563 | 35.575560 |
-| Random Walk | 1.627217 | 41.970833 |
+| 21-day rolling variance | 1.627217 | 41.970833 |
 | Unconditional | 2.038582 | 46.998799 |
 
-GARCH(1,1)-N ranks first on both losses. The gap to the unconditional benchmark
-is large and the gap to the random walk is small, which is the expected shape at
-a one-day horizon: daily volatility is persistent enough that "tomorrow looks
-like the recent past" is genuinely hard to beat.
+GARCH(1,1)-N has the lowest loss on both measures. The gap to GARCH(1,1)-t is
+0.006, and we have no test to tell the two apart. The gap to the unconditional
+benchmark is large and the gap to the rolling variance is small, which is the
+expected shape at a one-day horizon: daily volatility is persistent enough
+that "tomorrow looks like the recent past" is genuinely hard to beat.
 
 Plotting the 21-day rolling volatility against the GARCH(1,1)-N conditional
 volatility shows the difference in responsiveness between a boxcar filter with
